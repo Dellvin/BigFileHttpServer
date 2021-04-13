@@ -14,7 +14,6 @@ func New(db pgwrapper.DB) repository.Interface {
 	return dataBase{DB: db}
 }
 
-
 func (db dataBase)GetFileInfo(id int64) (model.File, error){
 	var file model.File
 	exist:=db.DB.Model(&file).Where("id=?", id).Select()

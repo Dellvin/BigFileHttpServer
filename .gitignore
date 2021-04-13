@@ -16,5 +16,6 @@
 /.idea/
 MainApplication/config/postgres.go
 .idea
+book.txt
 .idea/workspace.xml
 /go.sum/

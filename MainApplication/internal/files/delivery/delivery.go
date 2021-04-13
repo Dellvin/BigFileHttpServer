@@ -3,6 +3,8 @@ package delivery
 import (
 	"HttpBigFilesServer/MainApplication/errors"
 	"HttpBigFilesServer/MainApplication/internal/files/usecase"
+	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -29,9 +31,20 @@ func (d delivery)Download(w http.ResponseWriter, r *http.Request){
 }
 
 func (d delivery)Upload(w http.ResponseWriter, r *http.Request){
-	if r.Method != http.MethodGet{
-		_, _ = w.Write(errors.NotGet())
-		return
+	//if r.Method != http.MethodGet{
+	//	_, _ = w.Write(errors.NotGet())
+	//	return
+	//}
+	buf := make([]byte, 4096)
+	var total=0
+	for {
+		n, err := r.Body.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		total+=n
+		fmt.Println(total)
 	}
-	r.Body
+
+	fmt.Printf("TRANSMISSION COMPLETE")
 }
