@@ -15,7 +15,6 @@
 # vendor/
 /.idea/
 MainApplication/config/postgres.go
-MainApplication/config/cors.go
 .idea
 .idea/workspace.xml
 /go.sum/
