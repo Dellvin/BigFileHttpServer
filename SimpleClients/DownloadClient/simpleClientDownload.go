@@ -1,20 +1,35 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"strconv"
 )
+
+type Flags struct {
+	dest *string
+	addr *string
+	id *int
+	seek *int
+}
 
 const Boundary = "DellvinBlackDellvinBlackDellvinBlackDellvinBlack"
 
 func main() {
+	f:=setupCLArgs()
+	if f.addr==nil || f.id==nil{
+		return
+	}
+	addr:=prepareURL(f)
 	tr := http.DefaultTransport
 	client := http.Client{
 		Transport: tr,
 	}
-	resp, err :=client.Get("http://localhost:8080/download/4")
+	resp, err :=client.Get(addr)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -22,6 +37,15 @@ func main() {
 	defer resp.Body.Close()
 	fmt.Println("Response status:", resp.Status)
 	if resp.StatusCode==200{
+		var fd *os.File
+		if f.dest!=nil{
+			fd, err=os.Create(*f.dest)
+			if err!=nil{
+				fmt.Println(err.Error())
+				return
+			}
+		}
+
 		buf := make([]byte, 4096)
 		partReader := multipart.NewReader(resp.Body, Boundary)
 		for {
@@ -38,9 +62,18 @@ func main() {
 					fmt.Println(err.Error())
 					return
 				}
+				if fd!=nil{
+					fd.Write(buf[:n])
+				}else{
+					fmt.Printf(string(buf[:n]))
+				}
+
+			}
+			if fd!=nil{
+				fd.Write(buf[:n])
+			}else{
 				fmt.Printf(string(buf[:n]))
 			}
-			fmt.Printf(string(buf[:n]))
 		}
 		fmt.Println("Done")
 	} else{
@@ -49,4 +82,24 @@ func main() {
 		fmt.Println(string(body))
 	}
 
+}
+
+func setupCLArgs() Flags{
+	f:=Flags{}
+	f.dest = flag.String("dest", "./static/file.txt", "a destination for downloaded file")
+	f.addr = flag.String("addr", "http://localhost:8080", "address of remote server")
+	f.id = flag.Int("id", 18, "file id")
+	f.seek = flag.Int("seek", 32, "pos to seek in file")
+	flag.Parse()
+	return f
+}
+
+func prepareURL(f Flags) string{
+	url:=*f.addr
+	url+="/download/"
+	url+=strconv.Itoa(*f.id)
+	if f.seek!=nil{
+		url+="/"+strconv.Itoa(*f.seek)
+	}
+	return url
 }

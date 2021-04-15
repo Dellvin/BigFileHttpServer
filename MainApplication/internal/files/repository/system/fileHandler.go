@@ -22,12 +22,17 @@ func New(path string, l logger.Interface) repository.InterfaceFile {
 	}
 }
 
-func (s system) Get(id uint64) (*os.File, error){
+func (s system) Get(id uint64, seeker uint64) (*os.File, error){
 	path:=s.path+strconv.Itoa(int(id))
 	file, err:=os.Open(path)
 	if err!=nil{
 		s.log.WarningStr("Could not open file: "+path)
 		return nil, ErrorOpening
+	}
+	_, err=file.Seek(int64(seeker), 0)
+	if err!=nil{
+		s.log.WarningStr("Could not seek file: "+path)
+		return nil, ErrorSeeking
 	}
 	return file, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -8,13 +9,22 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
-const filename="book.txt"
-
 const boundary = "DellvinBlackDellvinBlackDellvinBlackDellvinBlack"
+type Flags struct {
+	src *string
+	addr *string
+}
 
 func main() {
+	f:=setupCLArgs()
+	if f.addr==nil {
+		return
+	}
+	fname:=getFileName(*f.src)
 	tr := http.DefaultTransport
 
 	client := &http.Client{
@@ -24,7 +34,7 @@ func main() {
 
 	fmt.Println("Set up pipe")
 	pR, pW := io.Pipe()
-	fd, err := os.Open(filename)
+	fd, err := os.Open(*f.src)
 	if err!=nil{
 		fmt.Println(err.Error())
 		return
@@ -38,7 +48,7 @@ func main() {
 		fmt.Println("Set up multipart writer")
 		multipartW.SetBoundary(boundary)
 		fmt.Println("Set up boundary")
-		partW, err0 := multipartW.CreateFormFile("file", filename)
+		partW, err0 := multipartW.CreateFormFile("file", *f.src)
 		fmt.Println("Set up part writer")
 		if err0 != nil {
 			panic("Something is amiss creating a part")
@@ -68,7 +78,7 @@ func main() {
 		Method: "POST",
 		URL: &url.URL{
 			Scheme: "http",
-			Host:   "localhost:8080",
+			Host:   *f.addr,
 			Path:   "/upload",
 		},
 		ProtoMajor:    1,
@@ -80,11 +90,33 @@ func main() {
 	req.Header = make(http.Header)
 	req.Header.Set(
 		"File-name",
-		"book.txt",
+		fname,
 	)
 	req.Header.Set("File-size", strconv.Itoa( int(fi.Size())))
 	fmt.Printf("Doing request\n")
+	time.Sleep(time.Second)
 	_, err = client.Do(req)
 	pR.Close()
 	fmt.Printf("Done request. Err: %v\n", err)
+}
+
+func setupCLArgs() Flags{
+	f:=Flags{}
+	f.src = flag.String("src", "./static/file.txt", "the source for uploaded file")
+	f.addr = flag.String("addr", "localhost:8080", "address of remote server")
+
+
+	flag.Parse()
+	return f
+}
+
+func prepareURL(f Flags) string{
+	url:=*f.addr
+	url+="/upload"
+	return url
+}
+
+func getFileName(path string) string{
+	splited:=strings.Split(path, "/")
+	return splited[len(splited)-1]
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type Interface interface {
-	Download(id uint64) (model.File, *os.File, error)
+	Download(id uint64, seeker uint64) (model.File, *os.File, error)
 	Upload(file io.ReadCloser, name string, size uint64) (model.File, error)
 }
 
@@ -28,13 +28,13 @@ func New(db repository.InterfaceDataBase, sys repository.InterfaceFile, l logger
 	}
 }
 
-func (u usecase) Download(id uint64) (model.File, *os.File, error) {
+func (u usecase) Download(id uint64, seeker uint64) (model.File, *os.File, error) {
 	info, err := u.info.Get(id)
 	if err != nil {
 		return model.File{}, nil, err
 	}
 
-	file, err := u.file.Get(id)
+	file, err := u.file.Get(id, seeker)
 	if err != nil {
 		return model.File{}, nil, err
 	}

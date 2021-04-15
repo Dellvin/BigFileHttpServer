@@ -1,8 +1,8 @@
 package delivery
 
 import (
-	"HttpBigFilesServer/MainApplication/errors/handler"
 	"HttpBigFilesServer/MainApplication/internal/files/usecase"
+	"HttpBigFilesServer/MainApplication/pkg"
 	"HttpBigFilesServer/MainApplication/pkg/logger"
 	"github.com/gorilla/mux"
 	"io"
@@ -42,8 +42,15 @@ func (d delivery)Download(w http.ResponseWriter, r *http.Request){
 		w.WriteHeader(405)
 		return
 	}
+	seekerStr := vars["From"]
+	seeker, err:=strconv.Atoi(seekerStr)
+	if err!=nil{
+		d.Log.WarningStr("expected INT value: "+err.Error())
+		w.WriteHeader(405)
+		return
+	}
 
-	info, fd, err:=d.Uc.Download(uint64(fID))
+	info, fd, err:=d.Uc.Download(uint64(fID), uint64(seeker))
 	if err!=nil{
 		w.WriteHeader(500)
 		return
@@ -72,8 +79,8 @@ func (d delivery)Upload(w http.ResponseWriter, r *http.Request){
 	}
 	info, err:=d.Uc.Upload(r.Body, r.Header.Get("File-name"), uint64(fsize))
 	if err!=nil{
-		w.WriteHeader(handler.HandleDownLoadError(err))
+		w.WriteHeader(pkg.HandleDownLoadError(err))
 		return
 	}
-	w.Write(handler.GetOkDownloadResponse(info))
+	w.Write(pkg.GetOkDownloadResponse(info))
 }
