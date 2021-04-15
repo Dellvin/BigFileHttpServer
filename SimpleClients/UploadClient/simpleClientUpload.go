@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"time"
 )
 
 const filename="book.txt"
@@ -20,7 +19,7 @@ func main() {
 
 	client := &http.Client{
 		Transport: tr,
-		Timeout:   10 * time.Second,
+		//Timeout:   10 * time.Second,
 	}
 
 	fmt.Println("Set up pipe")

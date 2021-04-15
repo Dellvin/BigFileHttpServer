@@ -3,13 +3,20 @@ package repository
 import (
 	"HttpBigFilesServer/MainApplication/internal/files/model"
 	"errors"
+	"io"
+	"os"
 )
 
 var GetFileError = errors.New("Could not get file")
 
-type Interface interface {
-	GetFileInfo(int64) (model.File, error)
-	SetFileInfo(model.File) error
+type InterfaceDataBase interface {
+	Get(uint64) (model.File, error)
+	Save(model.File) error
+	GenID() (uint64, error)
+}
 
-	IsIdExist() (uint64, error)
+type InterfaceFile interface {
+	Get(uint64) (*os.File, error)
+	Save(uint64, io.ReadCloser, uint64) (string, error)
+	Remove(string)
 }

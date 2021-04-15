@@ -1,81 +1,69 @@
 package usecase
 
 import (
-	"HttpBigFilesServer/MainApplication/config"
 	"HttpBigFilesServer/MainApplication/internal/files/model"
 	"HttpBigFilesServer/MainApplication/internal/files/repository"
-	"fmt"
+	"HttpBigFilesServer/MainApplication/pkg/logger"
 	"io"
-	"mime/multipart"
 	"os"
 	"time"
 )
 
 type Interface interface {
-	Download()
-	Upload(file io.ReadCloser, name string, size uint64) error
+	Download(id uint64) (model.File, *os.File, error)
+	Upload(file io.ReadCloser, name string, size uint64) (model.File, error)
 }
 
 type usecase struct {
-	rep repository.Interface
+	info repository.InterfaceDataBase
+	file repository.InterfaceFile
+	log  logger.Interface
 }
 
-func New(db repository.Interface) Interface {
-	return usecase{rep: db}
+func New(db repository.InterfaceDataBase, sys repository.InterfaceFile, l logger.Interface) Interface {
+	return usecase{
+		info: db,
+		file: sys,
+		log:  l,
+	}
 }
 
-func (u usecase) Download() {
-
-}
-
-func (u usecase) Upload(file io.ReadCloser, name string, size uint64) error {
-	fd, err := os.Create(name)
+func (u usecase) Download(id uint64) (model.File, *os.File, error) {
+	info, err := u.info.Get(id)
 	if err != nil {
-		fmt.Println("Creating")
-		return ErrorCreateFile
+		return model.File{}, nil, err
 	}
-	defer fd.Close()
-	buf := make([]byte, 4096)
-	var total uint64 = 0
-	partReader := multipart.NewReader(file, config.Boundary)
-	for {
-		part, err := partReader.NextPart()
-		if err != nil {
-			break
-		}
-		var n int
-		for {
-			n, err = part.Read(buf)
-			if err == io.EOF || err == io.ErrUnexpectedEOF{
-				break
-			} else if err !=nil {
-				return ErrorLoading
-			}
-			total+=uint64(n)
-			_, err=fd.Write(buf[:n])
-			if err!=nil{
-				fmt.Println("Writing")
-				return ErrorWriteFile
-			}
-		}
+
+	file, err := u.file.Get(id)
+	if err != nil {
+		return model.File{}, nil, err
 	}
-	if total != size {
-		return ErrorSizesDoesNotMatch
-	}
-	fid, err:=u.rep.IsIdExist()
-	if err!=nil{
-		return ErrorCouldNotGenID
-	}
-	err=u.rep.SetFileInfo(model.File{
-		Id: fid,
-		Name: name,
-		Path: config.Path +name,
-		Uploaded: uint64(time.Now().Unix()),
-		Size: size,
-		})
-	if err!=nil{
-		return ErrorCouldNotSaveFileInfo
-	}
-	return nil
+
+	return info, file, nil
 }
 
+func (u usecase) Upload(file io.ReadCloser, name string, size uint64) (model.File, error) {
+	fid, err := u.info.GenID()
+	if err != nil {
+		return model.File{}, ErrorCouldNotGenID
+	}
+	path, err := u.file.Save(fid, file, size)
+	if err != nil {
+		if len(path) > 0 {
+			u.file.Remove(path)
+		}
+		return model.File{}, err
+	}
+	fileInfo := model.File{
+		Id:       fid,
+		Name:     name,
+		Path:     path,
+		Uploaded: uint64(time.Now().Unix()),
+		Size:     size,
+	}
+	err = u.info.Save(fileInfo)
+	if err != nil {
+		return model.File{}, ErrorCouldNotSaveFileInfo
+	}
+	return fileInfo, nil
+}

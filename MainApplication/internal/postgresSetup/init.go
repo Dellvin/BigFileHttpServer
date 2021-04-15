@@ -5,6 +5,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/go-pg/pg/v9/orm"
 	pgwrapper "gitlab.com/slax0rr/go-pg-wrapper"
+	"log"
 )
 type DataBase struct {
 	DB           pgwrapper.DB
@@ -42,6 +43,7 @@ func createSchema(db pgwrapper.DB) error {
 			IfNotExists: true,
 		})
 		if err != nil {
+			log.Panic(err)
 			return err
 		}
 	}

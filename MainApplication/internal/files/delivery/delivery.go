@@ -1,17 +1,14 @@
 package delivery
 
 import (
-	"HttpBigFilesServer/MainApplication/errors"
+	"HttpBigFilesServer/MainApplication/errors/handler"
 	"HttpBigFilesServer/MainApplication/internal/files/usecase"
-	"fmt"
+	"HttpBigFilesServer/MainApplication/pkg/logger"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
-	"sync"
 )
-var Wg =sync.WaitGroup{}
 
 type Interface interface {
 	Download(w http.ResponseWriter, r *http.Request)
@@ -20,54 +17,63 @@ type Interface interface {
 
 type delivery struct {
 	Uc       usecase.Interface
+	Log		logger.Interface
 }
 
-func New(usecase usecase.Interface) Interface {
-	return delivery{Uc: usecase}
+func New(usecase usecase.Interface, l logger.Interface) Interface {
+	return delivery{
+		Uc: usecase,
+		Log: l,
+	}
 }
 
 
 func (d delivery)Download(w http.ResponseWriter, r *http.Request){
-	vars := mux.Vars(r)
-	filename := vars["Id"]
 	if r.Method != http.MethodGet{
-		_, _ = w.Write(errors.NotGet())
+		d.Log.WarningStr("expected GET method instead of "+r.Method)
+		w.WriteHeader(405)
 		return
 	}
-	pR, pW := io.Pipe()
-	fd, err := os.Open(filename)
+	vars := mux.Vars(r)
+	fIDstr := vars["Id"]
+	fID, err:=strconv.Atoi(fIDstr)
 	if err!=nil{
-		return//TODO
+		d.Log.WarningStr("expected INT value: "+err.Error())
+		w.WriteHeader(405)
+		return
+	}
+
+	info, fd, err:=d.Uc.Download(uint64(fID))
+	if err!=nil{
+		w.WriteHeader(500)
+		return
 	}
 	defer fd.Close()
-	w.Header().Add("ProtoMajor", "1")
-	w.Header().Add("ProtoMinor", "1")
-	w.Header().Add("ContentLength", "-1")
-	w.Header().Add("File-name", filename)
-	w.Header().Add("File-size", filename)
-	w.Header().Add("File-uploaded", filename)
-	go MultiPart(filename, pW, fd)
-	_, err = io.Copy(w, pR)
-	if err!=nil{
-		//TODO
-	}
+
+	setHeadersForDownload(w, info)
+
+	pR, pW := io.Pipe()
+	go MultiPart(info.Name, pW, fd, d.Log)
+	io.Copy(w, pR)
 	_ = pR.Close()
 }
 
 func (d delivery)Upload(w http.ResponseWriter, r *http.Request){
 	if r.Method != http.MethodPost{
-		_, _ = w.Write(errors.NotPost())
+		d.Log.WarningStr("expected POST method instead of "+r.Method)
+		w.WriteHeader(405)
 		return
 	}
 	fsize, err:=strconv.Atoi(r.Header.Get("File-size"))
 	if err!=nil{
-		//TODO
+		d.Log.WarningStr("expected INT value: "+err.Error())
+		w.WriteHeader(405)
+		return
 	}
-	err=d.Uc.Upload(r.Body, "kek.txt", uint64(fsize))
+	info, err:=d.Uc.Upload(r.Body, r.Header.Get("File-name"), uint64(fsize))
 	if err!=nil{
-
+		w.WriteHeader(handler.HandleDownLoadError(err))
+		return
 	}
-
-
-	fmt.Printf("TRANSMISSION COMPLETE")
+	w.Write(handler.GetOkDownloadResponse(info))
 }
