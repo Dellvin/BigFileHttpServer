@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 )
-
+//go:generate mockgen -source=./DataBaseRequests.go -destination=../../../test/mock_LetterRepository/LetterRepositoryMock.go
 var GetFileError = errors.New("Could not get file")
 
 type InterfaceDataBase interface {

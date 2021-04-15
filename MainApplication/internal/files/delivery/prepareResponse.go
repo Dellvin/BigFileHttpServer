@@ -17,7 +17,6 @@ func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interfa
 	defer multipartW.Close()
 	err:=multipartW.SetBoundary(config.Boundary)
 	if err!=nil{//TODO normal function
-
 		return
 	}
 	partW, err := multipartW.CreateFormFile("file", filename)
