@@ -25,7 +25,7 @@ func main(){
 
 	router := mux.NewRouter()
 	router.HandleFunc("/upload", de.Upload)
-	router.HandleFunc("/download", de.Download)
+	router.HandleFunc("/download/{Id:.*}", de.Download)
 
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   config.AllowedOriginsCORS,

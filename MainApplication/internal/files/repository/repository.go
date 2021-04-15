@@ -10,4 +10,6 @@ var GetFileError = errors.New("Could not get file")
 type Interface interface {
 	GetFileInfo(int64) (model.File, error)
 	SetFileInfo(model.File) error
+
+	IsIdExist() (uint64, error)
 }

@@ -19,3 +19,22 @@ func NotGet() []byte {
 	ans, _ := json.Marshal(err)
 	return ans
 }
+
+func UploadResponse(text string, code uint16) []byte {
+	err := &Response{
+		Code:        code,
+		Description: text,
+	}
+	ans, _ := json.Marshal(err)
+	return ans
+}
+
+func DownloadResponse(text string, code uint16) []byte {
+	err := &Response{
+		Code:        code,
+		Description: text,
+
+	}
+	ans, _ := json.Marshal(err)
+	return ans
+}

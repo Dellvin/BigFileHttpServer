@@ -1,0 +1,12 @@
+package config
+
+import "time"
+
+const (
+	DbUser = "test"
+	DbPassword   = "0000"
+	DbDB         = "meDataBase"
+	Port         = ":8000"
+	ReadTimeout  = 8 * time.Second
+	WriteTimeout = 9 * time.Second
+)
