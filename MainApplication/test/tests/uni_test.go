@@ -6,15 +6,13 @@ import (
 	"testing"
 )
 
-func TestRandom(t *testing.T){
-	_, err:=pkg.GenId()
-	if err!=nil{
+func TestRandom(t *testing.T) {
+	_, err := pkg.GenId()
+	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	_, err=pkg.GenId()
-	if err!=nil{
+	_, err = pkg.GenId()
+	if err != nil {
 		log.Fatalf(err.Error())
 	}
 }
-
-

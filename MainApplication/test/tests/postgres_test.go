@@ -4,7 +4,6 @@ import (
 	mock "HttpBigFilesServer/MainApplication/test/mock_postgres"
 	"github.com/stretchr/testify/assert"
 	"testing"
-
 )
 
 func TestGet(t *testing.T) {
@@ -22,7 +21,7 @@ func TestGet(t *testing.T) {
 func TestSave(t *testing.T) {
 	db, r := mock.MockFileDB()
 	query := mock.MockFile(db)
-	mockRes:= mock.MockResult{}
+	mockRes := mock.MockResult{}
 	query.On("Insert").Return(mockRes, nil)
 
 	err := r.Save(mock.FileInfoTest)

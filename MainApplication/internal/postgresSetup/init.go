@@ -7,6 +7,7 @@ import (
 	pgwrapper "gitlab.com/slax0rr/go-pg-wrapper"
 	"log"
 )
+
 type DataBase struct {
 	DB           pgwrapper.DB
 	User         string

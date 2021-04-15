@@ -13,34 +13,34 @@ import (
 type Flags struct {
 	dest *string
 	addr *string
-	id *int
+	id   *int
 	seek *int
 }
 
 const Boundary = "DellvinBlackDellvinBlackDellvinBlackDellvinBlack"
 
 func main() {
-	f:=setupCLArgs()
-	if f.addr==nil || f.id==nil{
+	f := setupCLArgs()
+	if f.addr == nil || f.id == nil {
 		return
 	}
-	addr:=prepareURL(f)
+	addr := prepareURL(f)
 	tr := http.DefaultTransport
 	client := http.Client{
 		Transport: tr,
 	}
-	resp, err :=client.Get(addr)
+	resp, err := client.Get(addr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer resp.Body.Close()
 	fmt.Println("Response status:", resp.Status)
-	if resp.StatusCode==200{
+	if resp.StatusCode == 200 {
 		var fd *os.File
-		if f.dest!=nil{
-			fd, err=os.Create(*f.dest)
-			if err!=nil{
+		if f.dest != nil {
+			fd, err = os.Create(*f.dest)
+			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
@@ -58,25 +58,25 @@ func main() {
 				n, err = part.Read(buf)
 				if err == io.EOF {
 					break
-				} else if err!=nil{
+				} else if err != nil {
 					fmt.Println(err.Error())
 					return
 				}
-				if fd!=nil{
+				if fd != nil {
 					fd.Write(buf[:n])
-				}else{
+				} else {
 					fmt.Printf(string(buf[:n]))
 				}
 
 			}
-			if fd!=nil{
+			if fd != nil {
 				fd.Write(buf[:n])
-			}else{
+			} else {
 				fmt.Printf(string(buf[:n]))
 			}
 		}
 		fmt.Println("Done")
-	} else{
+	} else {
 		var body = make([]byte, 256)
 		resp.Body.Read(body)
 		fmt.Println(string(body))
@@ -84,8 +84,8 @@ func main() {
 
 }
 
-func setupCLArgs() Flags{
-	f:=Flags{}
+func setupCLArgs() Flags {
+	f := Flags{}
 	f.dest = flag.String("dest", "./static/file.txt", "a destination for downloaded file")
 	f.addr = flag.String("addr", "http://localhost:8080", "address of remote server")
 	f.id = flag.Int("id", 18, "file id")
@@ -94,12 +94,12 @@ func setupCLArgs() Flags{
 	return f
 }
 
-func prepareURL(f Flags) string{
-	url:=*f.addr
-	url+="/download/"
-	url+=strconv.Itoa(*f.id)
-	if f.seek!=nil{
-		url+="/"+strconv.Itoa(*f.seek)
+func prepareURL(f Flags) string {
+	url := *f.addr
+	url += "/download/"
+	url += strconv.Itoa(*f.id)
+	if f.seek != nil {
+		url += "/" + strconv.Itoa(*f.seek)
 	}
 	return url
 }

@@ -1,3 +1,3 @@
 package config
 
-const Path ="static/"
+const Path = "static/"

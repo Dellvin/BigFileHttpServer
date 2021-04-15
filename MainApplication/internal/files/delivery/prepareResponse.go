@@ -15,8 +15,8 @@ func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interfa
 	defer pW.Close()
 	multipartW := multipart.NewWriter(pW)
 	defer multipartW.Close()
-	err:=multipartW.SetBoundary(config.Boundary)
-	if err!=nil{//TODO normal function
+	err := multipartW.SetBoundary(config.Boundary)
+	if err != nil { //TODO normal function
 		return
 	}
 	partW, err := multipartW.CreateFormFile("file", filename)
@@ -33,13 +33,13 @@ func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interfa
 			break
 		}
 		if err != nil {
-			l.ErrorStr("The error reading from connector: "+ err.Error())
+			l.ErrorStr("The error reading from connector: " + err.Error())
 		}
 		buf = buf[:n]
 	}
 }
 
-func setHeadersForDownload(w http.ResponseWriter, file model.File){
+func setHeadersForDownload(w http.ResponseWriter, file model.File) {
 	w.Header().Add("ProtoMajor", "1")
 	w.Header().Add("ProtoMinor", "1")
 	w.Header().Add("ContentLength", "-1")

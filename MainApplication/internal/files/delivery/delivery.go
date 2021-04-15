@@ -16,42 +16,41 @@ type Interface interface {
 }
 
 type delivery struct {
-	Uc       usecase.Interface
-	Log		logger.Interface
+	Uc  usecase.Interface
+	Log logger.Interface
 }
 
 func New(usecase usecase.Interface, l logger.Interface) Interface {
 	return delivery{
-		Uc: usecase,
+		Uc:  usecase,
 		Log: l,
 	}
 }
 
-
-func (d delivery)Download(w http.ResponseWriter, r *http.Request){
-	if r.Method != http.MethodGet{
-		d.Log.WarningStr("expected GET method instead of "+r.Method)
+func (d delivery) Download(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		d.Log.WarningStr("expected GET method instead of " + r.Method)
 		w.WriteHeader(405)
 		return
 	}
 	vars := mux.Vars(r)
 	fIDstr := vars["Id"]
-	fID, err:=strconv.Atoi(fIDstr)
-	if err!=nil{
-		d.Log.WarningStr("expected INT value: "+err.Error())
+	fID, err := strconv.Atoi(fIDstr)
+	if err != nil {
+		d.Log.WarningStr("expected INT value: " + err.Error())
 		w.WriteHeader(405)
 		return
 	}
 	seekerStr := vars["From"]
-	seeker, err:=strconv.Atoi(seekerStr)
-	if err!=nil{
-		d.Log.WarningStr("expected INT value: "+err.Error())
+	seeker, err := strconv.Atoi(seekerStr)
+	if err != nil {
+		d.Log.WarningStr("expected INT value: " + err.Error())
 		w.WriteHeader(405)
 		return
 	}
 
-	info, fd, err:=d.Uc.Download(uint64(fID), uint64(seeker))
-	if err!=nil{
+	info, fd, err := d.Uc.Download(uint64(fID), uint64(seeker))
+	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
@@ -65,20 +64,20 @@ func (d delivery)Download(w http.ResponseWriter, r *http.Request){
 	_ = pR.Close()
 }
 
-func (d delivery)Upload(w http.ResponseWriter, r *http.Request){
-	if r.Method != http.MethodPost{
-		d.Log.WarningStr("expected POST method instead of "+r.Method)
+func (d delivery) Upload(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		d.Log.WarningStr("expected POST method instead of " + r.Method)
 		w.WriteHeader(405)
 		return
 	}
-	fsize, err:=strconv.Atoi(r.Header.Get("File-size"))
-	if err!=nil{
-		d.Log.WarningStr("expected INT value: "+err.Error())
+	fsize, err := strconv.Atoi(r.Header.Get("File-size"))
+	if err != nil {
+		d.Log.WarningStr("expected INT value: " + err.Error())
 		w.WriteHeader(405)
 		return
 	}
-	info, err:=d.Uc.Upload(r.Body, r.Header.Get("File-name"), uint64(fsize))
-	if err!=nil{
+	info, err := d.Uc.Upload(r.Body, r.Header.Get("File-name"), uint64(fsize))
+	if err != nil {
 		w.WriteHeader(pkg.HandleDownLoadError(err))
 		return
 	}

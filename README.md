@@ -17,7 +17,11 @@
         
 3) Ну и последнее:
 
-        go rum ./cmd/main.go
+        go run ./cmd/main.go
+        
+        или
+        
+        go run ./cmd/mail.go -port=8000
         
 
     

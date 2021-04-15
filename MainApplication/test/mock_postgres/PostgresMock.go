@@ -11,15 +11,15 @@ import (
 	ormmocks "gitlab.com/slax0rr/go-pg-wrapper/mocks/orm"
 )
 
-var FileInfoTest =FileModel.File{
-	Id: 0,
-	Name: "text.txt",
-	Path: "static/text.txt",
+var FileInfoTest = FileModel.File{
+	Id:       0,
+	Name:     "text.txt",
+	Path:     "static/text.txt",
 	Uploaded: 1,
-	Size: 12,
+	Size:     12,
 }
 
-func MockFile(db *mocks.DB) *ormmocks.Query  {
+func MockFile(db *mocks.DB) *ormmocks.Query {
 	query := new(ormmocks.Query)
 	mockCall := db.On("Model", mock.AnythingOfType("*model.File")).Return(query)
 	mockCall.RunFn = func(args mock.Arguments) {
