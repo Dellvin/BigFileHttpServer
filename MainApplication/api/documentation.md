@@ -8,6 +8,7 @@
     
         File-name: myfile
         File-size: 256
+        Chunk-size: 1024 (опциональный, по умолчанию 4096 байт, но не больше 1мб)
        
     ответы:
         
@@ -36,6 +37,7 @@
 2) Скачивание файла chunked
     
         GET /download/{id}
+        GET /download/{id}/{chunk}
         
     заголовков нет
 
@@ -60,7 +62,9 @@
    
 3) Скачивание файла с определенного места chunked
         
-        POST /download/{id}/{from}
+        GET /download/{id}/{from}
+        GET /download/{id}/{chunk}/{from}
+        
         
     Этот запрос по структуре почти не отличается от предыдущего, кроме
     параметра from. Этот параметр отвечает за позицию откуда 

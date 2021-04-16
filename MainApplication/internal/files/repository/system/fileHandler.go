@@ -37,7 +37,7 @@ func (s system) Get(id uint64, seeker uint64) (*os.File, error) {
 	return file, nil
 }
 
-func (s system) Save(id uint64, file io.ReadCloser, size uint64) (string, error) {
+func (s system) Save(id uint64, file io.ReadCloser, size uint64, chunk int) (string, error) {
 	path := s.path + strconv.Itoa(int(id))
 	fd, err := os.Create(path)
 
@@ -46,7 +46,7 @@ func (s system) Save(id uint64, file io.ReadCloser, size uint64) (string, error)
 		return "", ErrorCreateFile
 	}
 	defer fd.Close()
-	buf := make([]byte, 4096)
+	buf := make([]byte, chunk)
 	var total uint64 = 0
 	partReader := multipart.NewReader(file, config.Boundary)
 	for {

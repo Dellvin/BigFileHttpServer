@@ -11,7 +11,7 @@ import (
 
 type Interface interface {
 	Download(id uint64, seeker uint64) (model.File, *os.File, error)
-	Upload(file io.ReadCloser, name string, size uint64) (model.File, error)
+	Upload(file io.ReadCloser, name string, size uint64, chunk int) (model.File, error)
 }
 
 type usecase struct {
@@ -42,12 +42,12 @@ func (u usecase) Download(id uint64, seeker uint64) (model.File, *os.File, error
 	return info, file, nil
 }
 
-func (u usecase) Upload(file io.ReadCloser, name string, size uint64) (model.File, error) {
+func (u usecase) Upload(file io.ReadCloser, name string, size uint64, chunk int) (model.File, error) {
 	fid, err := u.info.GenID()
 	if err != nil {
 		return model.File{}, ErrorCouldNotGenID
 	}
-	path, err := u.file.Save(fid, file, size)
+	path, err := u.file.Save(fid, file, size, chunk)
 	if err != nil {
 		if len(path) > 0 {
 			u.file.Remove(path)

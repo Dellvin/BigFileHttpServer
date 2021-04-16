@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"HttpBigFilesServer/MainApplication/config"
 	"HttpBigFilesServer/MainApplication/internal/files/model"
 	"HttpBigFilesServer/MainApplication/internal/files/repository/system"
 	"HttpBigFilesServer/MainApplication/internal/files/usecase"
@@ -69,7 +70,7 @@ func TestUploadGenIDError(t *testing.T) {
 	sys := usecase.New(mockInfo, mockFile, l)
 	test := strings.NewReader("shiny!")
 	testReader := ioutil.NopCloser(test)
-	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12))
+	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12), config.ChunkSize)
 	assert.NotNil(t, err)
 	assert.Equal(t, fInfo, model.File{})
 }
@@ -83,9 +84,9 @@ func TestUploadSaveError(t *testing.T) {
 	mockFile := mock_repository.NewMockInterfaceFile(ctrl)
 	mockInfo := mock_repository.NewMockInterfaceDataBase(ctrl)
 	mockInfo.EXPECT().GenID().Return(uint64(0), nil)
-	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12)).Return("", usecase.ErrorCreateFile)
+	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12), config.ChunkSize).Return("", usecase.ErrorCreateFile)
 	sys := usecase.New(mockInfo, mockFile, l)
-	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12))
+	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12), config.ChunkSize)
 	assert.NotNil(t, err)
 	assert.Equal(t, fInfo, model.File{})
 }
@@ -99,10 +100,10 @@ func TestUploadSaveWithPathError(t *testing.T) {
 	mockFile := mock_repository.NewMockInterfaceFile(ctrl)
 	mockInfo := mock_repository.NewMockInterfaceDataBase(ctrl)
 	mockInfo.EXPECT().GenID().Return(uint64(0), nil)
-	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12)).Return("path", usecase.ErrorCreateFile)
+	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12), config.ChunkSize).Return("path", usecase.ErrorCreateFile)
 	mockFile.EXPECT().Remove("path").Return()
 	sys := usecase.New(mockInfo, mockFile, l)
-	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12))
+	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12), config.ChunkSize)
 	assert.NotNil(t, err)
 	assert.Equal(t, fInfo, model.File{})
 }
@@ -116,7 +117,7 @@ func TestUploadSaveInfoError(t *testing.T) {
 	mockFile := mock_repository.NewMockInterfaceFile(ctrl)
 	mockInfo := mock_repository.NewMockInterfaceDataBase(ctrl)
 	mockInfo.EXPECT().GenID().Return(uint64(0), nil)
-	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12)).Return("path", nil)
+	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12), config.ChunkSize).Return("path", nil)
 	mockInfo.EXPECT().Save(model.File{
 		Id:       0,
 		Name:     "file.txt",
@@ -125,7 +126,7 @@ func TestUploadSaveInfoError(t *testing.T) {
 		Size:     12,
 	}).Return(usecase.ErrorCouldNotSaveFileInfo)
 	sys := usecase.New(mockInfo, mockFile, l)
-	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12))
+	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12), config.ChunkSize)
 	assert.NotNil(t, err)
 	assert.Equal(t, fInfo, model.File{})
 }
@@ -139,7 +140,7 @@ func TestUploadSuccess(t *testing.T) {
 	mockFile := mock_repository.NewMockInterfaceFile(ctrl)
 	mockInfo := mock_repository.NewMockInterfaceDataBase(ctrl)
 	mockInfo.EXPECT().GenID().Return(uint64(0), nil)
-	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12)).Return("path", nil)
+	mockFile.EXPECT().Save(uint64(0), testReader, uint64(12), config.ChunkSize).Return("path", nil)
 	mockInfo.EXPECT().Save(model.File{
 		Id:       0,
 		Name:     "file.txt",
@@ -148,7 +149,7 @@ func TestUploadSuccess(t *testing.T) {
 		Size:     12,
 	}).Return(nil)
 	sys := usecase.New(mockInfo, mockFile, l)
-	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12))
+	fInfo, err := sys.Upload(testReader, "file.txt", uint64(12), config.ChunkSize)
 	assert.Nil(t, err)
 	assert.Equal(t, fInfo, model.File{
 		Id:       0,

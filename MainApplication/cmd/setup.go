@@ -63,6 +63,8 @@ func initRouters(db postgresSetup.DataBase, logger logger.Interface) *mux.Router
 	router.HandleFunc("/upload", de.Upload)
 	router.HandleFunc("/download/{Id}", de.Download)
 	router.HandleFunc("/download/{Id}/{From}", de.Download)
+	router.HandleFunc("/download/{Id}/{Chunk}", de.Download)
+	router.HandleFunc("/download/{Id}/{Chunk}/{From}", de.Download)
 	return router
 }
 

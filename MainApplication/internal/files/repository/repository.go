@@ -18,6 +18,6 @@ type InterfaceDataBase interface {
 
 type InterfaceFile interface {
 	Get(uint64, uint64) (*os.File, error)
-	Save(uint64, io.ReadCloser, uint64) (string, error)
+	Save(uint64, io.ReadCloser, uint64, int) (string, error)
 	Remove(string)
 }

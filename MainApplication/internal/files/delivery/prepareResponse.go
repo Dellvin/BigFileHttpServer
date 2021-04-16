@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interface) {
+func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interface, chunk int) {
 	defer pW.Close()
 	multipartW := multipart.NewWriter(pW)
 	defer multipartW.Close()
@@ -25,7 +25,7 @@ func MultiPart(filename string, pW *io.PipeWriter, fd *os.File, l logger.Interfa
 		return
 	}
 	connector := io.TeeReader(fd, partW)
-	buf := make([]byte, 4096)
+	buf := make([]byte, chunk)
 	for {
 		/* fd -> connector -> partW -> multipartW -> pW -> pR */
 		n, err := connector.Read(buf)

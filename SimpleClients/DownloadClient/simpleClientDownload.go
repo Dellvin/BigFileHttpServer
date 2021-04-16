@@ -15,6 +15,7 @@ type Flags struct {
 	addr *string
 	id   *int
 	seek *int
+	chunk *int
 }
 
 const Boundary = "DellvinBlackDellvinBlackDellvinBlackDellvinBlack"
@@ -28,7 +29,9 @@ func main() {
 	tr := http.DefaultTransport
 	client := http.Client{
 		Transport: tr,
+
 	}
+
 	resp, err := client.Get(addr)
 	if err != nil {
 		fmt.Println(err)
@@ -46,7 +49,7 @@ func main() {
 			}
 		}
 
-		buf := make([]byte, 4096)
+		buf := make([]byte, *f.chunk)
 		partReader := multipart.NewReader(resp.Body, Boundary)
 		for {
 			part, err := partReader.NextPart()
@@ -90,6 +93,7 @@ func setupCLArgs() Flags {
 	f.addr = flag.String("addr", "http://localhost:8080", "address of remote server")
 	f.id = flag.Int("id", 18, "file id")
 	f.seek = flag.Int("seek", 32, "pos to seek in file")
+	f.chunk=flag.Int("chunk", 4096, "size of chunk")
 	flag.Parse()
 	return f
 }
@@ -98,6 +102,9 @@ func prepareURL(f Flags) string {
 	url := *f.addr
 	url += "/download/"
 	url += strconv.Itoa(*f.id)
+	if f.chunk!=nil{
+		url += "/" + strconv.Itoa(*f.chunk)
+	}
 	if f.seek != nil {
 		url += "/" + strconv.Itoa(*f.seek)
 	}

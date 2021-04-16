@@ -18,6 +18,7 @@ const boundary = "DellvinBlackDellvinBlackDellvinBlackDellvinBlack"
 type Flags struct {
 	src  *string
 	addr *string
+	chunk *int
 }
 
 func main() {
@@ -52,7 +53,9 @@ func main() {
 		partW, err0 := multipartW.CreateFormFile("file", *f.src)
 		fmt.Println("Set up part writer")
 		if err0 != nil {
-			panic("Something is amiss creating a part")
+			fmt.Println("Something is amiss creating a part")
+			fmt.Println(err0)
+			return
 		}
 
 		if err != nil {
@@ -60,7 +63,7 @@ func main() {
 			return
 		}
 		connector := io.TeeReader(fd, partW)
-		buf := make([]byte, 4096)
+		buf := make([]byte, *f.chunk)
 		for {
 			/* stdin -> connector -> partW -> multipartW -> pW -> pR */
 			_, err := connector.Read(buf)
@@ -88,12 +91,17 @@ func main() {
 		Body:          pR,
 	}
 	fi, err := fd.Stat()
+	if err!=nil{
+		fmt.Println(err)
+		return
+	}
 	req.Header = make(http.Header)
-	req.Header.Set(
-		"File-name",
-		fname,
-	)
+	req.Header.Set("Transfer-Encoding", "chunked")
+	req.Header.Set("Chunk-size", strconv.Itoa(*f.chunk))
+	req.Header.Set("File-name", fname)
 	req.Header.Set("File-size", strconv.Itoa(int(fi.Size())))
+
+
 	fmt.Printf("Doing request\n")
 	time.Sleep(time.Second)
 	_, err = client.Do(req)
@@ -105,15 +113,9 @@ func setupCLArgs() Flags {
 	f := Flags{}
 	f.src = flag.String("src", "./static/file.txt", "the source for uploaded file")
 	f.addr = flag.String("addr", "localhost:8080", "address of remote server")
-
+	f.chunk=flag.Int("chunk", 4096, "size of chunk")
 	flag.Parse()
 	return f
-}
-
-func prepareURL(f Flags) string {
-	url := *f.addr
-	url += "/upload"
-	return url
 }
 
 func getFileName(path string) string {
